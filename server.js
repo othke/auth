@@ -69,6 +69,31 @@ apiRoute.post('/authenticate', function(req, res){
 	});
 });
 
+//Private Routes
+// Middleware for check token
+apiRoute.use(function(req, res, next){
+
+	// Check token everywhere
+	var token = req.body.token || req.query.token || req.headers['x-access-token'];
+	
+	if(token){
+		// Verify the token
+		jwt.verify(token, app.get('super_secret'), function(err, decoded){
+			if(err){
+				res.json({success: false, message: 'failed to authenticate token'});
+			}
+			else{
+				req.decoded = decoded;
+				console.log(decoded);
+				// Call next Middleware
+				next();
+			}
+		});
+	}
+	else{
+		return res.status(403).send({success: false, message: 'You must be authenticate'});		
+	}
+});
 
 // Standard API Page
 apiRoute.get('/', function(req, res){
@@ -77,6 +102,7 @@ apiRoute.get('/', function(req, res){
 
 // Get all the users
 apiRoute.get('/users', function(req, res){
+	console.log('users');
 	User.find({}, function(err, users){
 		if(err) throw err;
 		res.json(users);
