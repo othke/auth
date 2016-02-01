@@ -37,6 +37,39 @@ app.get('/setup', function(req, res){
 // Router pour l'API
 var apiRoute = express.Router();
 
+// Authentification
+apiRoute.post('/authenticate', function(req, res){
+
+	// Find user by name
+	User.findOne({name: req.body.name}, function(err, user){
+		if(err) throw err;
+
+		// User not find
+		if(!user){
+			res.json({success: false, message: 'unable to find user with that name'});
+		}
+		else{
+			// Wrong password
+			if(user.password != req.body.password){
+				res.json( {success: false, message: 'wrong password'});
+			}
+			else{
+
+				// User found with good password
+				// Create toke
+				var token = jwt.sign(user, app.get('super_secret'),
+					{expiresInMinutes: 1440});
+
+				res.json({
+					success: true,
+					message: 'Enjoy your token',
+					token: token});
+			}
+		}
+	});
+});
+
+
 // Standard API Page
 apiRoute.get('/', function(req, res){
 	res.json({message: "Welcome to the auth API"});
